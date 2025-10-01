@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuctionWebSocket } from "@/hooks/websocket";
 
 interface Bid {
   id: string;
@@ -36,6 +37,9 @@ interface BidDialogProps {
 export function BidDialog({ open, onOpenChange, auction, onSubmitBid }: BidDialogProps) {
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Subscribe to WebSocket updates for this auction
+  const { isConnected } = useAuctionWebSocket(auction.id);
 
   const minBid = auction.currentBid + auction.minIncrement;
 

@@ -3,14 +3,22 @@ import { BidDialog } from "@/components/bid-dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useAuctions, useCreateBid, useAuctionBids } from "@/hooks/api";
+import { useCurrentUserId, useAuth } from "@/contexts/auth";
 
 export default function Auctions() {
   const [selectedAuction, setSelectedAuction] = useState<string | null>(null);
   const [bidDialogOpen, setBidDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  //todo: remove mock functionality
+  const currentUserId = useCurrentUserId();
+  const { user } = useAuth();
+
+  // Fetch real data using React Query
+  const { data: auctions = [], isLoading } = useAuctions();
+  const { data: selectedAuctionBids = [] } = useAuctionBids(selectedAuction || "");
+  const createBidMutation = useCreateBid();
   const mockAuctions = [
     {
       id: "1",
@@ -86,13 +94,106 @@ export default function Auctions() {
     setBidDialogOpen(true);
   };
 
-  const handleSubmitBid = (auctionId: string, amount: number) => {
-    console.log("Bid submitted:", { auctionId, amount });
+  // Filter auctions based on search query
+  const filteredAuctions = useMemo(() => {
+    return auctions.filter(auction =>
+      auction.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (auction.description && auction.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [auctions, searchQuery]);
+
+  // Transform auction data for display
+  const displayAuctions = filteredAuctions.map(auction => ({
+    id: auction.id,
+    title: auction.title,
+    facebookUrl: auction.facebookUrl || "",
+    currentBid: parseFloat(auction.currentBid),
+    bidCount: auction.bidCount,
+    endTime: new Date(auction.endTime),
+    status: auction.status === "ending-soon" ? "ending-soon" as const :
+            auction.bidCount > 20 ? "hot" as const : "live" as const,
+  }));
+
+  // Get selected auction data
+  const selectedAuctionData = auctions.find(a => a.id === selectedAuction);
+
+  // Prepare bid dialog data
+  const bidDialogData = selectedAuctionData ? {
+    id: selectedAuctionData.id,
+    title: selectedAuctionData.title,
+    currentBid: parseFloat(selectedAuctionData.currentBid),
+    minIncrement: parseFloat(selectedAuctionData.minIncrement),
+    bids: selectedAuctionBids.map(bid => ({
+      id: bid.id,
+      bidder: bid.bidder,
+      amount: parseFloat(bid.amount),
+      timestamp: new Date(bid.createdAt),
+    })),
+  } : null;
+
+  const handleSubmitBid = async (auctionId: string, amount: number) => {
+    try {
+      await createBidMutation.mutateAsync({
+        amount: amount.toString(),
+        bidder: user?.name || user?.username || "Anonymous",
+        auctionId,
+        userId: currentUserId,
+      });
+      setBidDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to place bid:", error);
+    }
   };
 
-  const filteredAuctions = mockAuctions.filter(auction =>
-    auction.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading auctions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (filteredAuctions.length === 0 && !searchQuery) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-lg font-medium text-muted-foreground mb-2">No auctions yet</p>
+          <p className="text-sm text-muted-foreground">Create your first auction to get started!</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (filteredAuctions.length === 0 && searchQuery) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">All Auctions</h1>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search auctions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-auctions"
+          />
+        </div>
+
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-lg font-medium text-muted-foreground mb-2">No auctions found</p>
+            <p className="text-sm text-muted-foreground">Try adjusting your search terms</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,7 +205,7 @@ export default function Auctions() {
           </p>
         </div>
         <Badge className="bg-success text-white">
-          {mockAuctions.length} Active
+          {displayAuctions.length} Active
         </Badge>
       </div>
 
@@ -119,22 +220,32 @@ export default function Auctions() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAuctions.map((auction) => (
-          <AuctionCard
-            key={auction.id}
-            {...auction}
-            onPlaceBid={handlePlaceBid}
-          />
-        ))}
-      </div>
+      {displayAuctions.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayAuctions.map((auction) => (
+            <AuctionCard
+              key={auction.id}
+              {...auction}
+              onPlaceBid={handlePlaceBid}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            {searchQuery ? "No auctions match your search." : "No active auctions at the moment."}
+          </p>
+        </div>
+      )}
 
-      <BidDialog
-        open={bidDialogOpen}
-        onOpenChange={setBidDialogOpen}
-        auction={mockBidData}
-        onSubmitBid={handleSubmitBid}
-      />
+      {bidDialogData && (
+        <BidDialog
+          open={bidDialogOpen}
+          onOpenChange={setBidDialogOpen}
+          auction={bidDialogData}
+          onSubmitBid={handleSubmitBid}
+        />
+      )}
     </div>
   );
 }

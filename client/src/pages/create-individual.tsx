@@ -25,6 +25,10 @@ import {
 } from "@/components/ui/select";
 import { SiFacebook } from "react-icons/si";
 import { Upload, X } from "lucide-react";
+import { useUserFacebookGroups, useCreateAuction } from "@/hooks/api";
+import { useCurrentUserId } from "@/contexts/auth";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 const individualAuctionSchema = z.object({
   facebookGroup: z.string().min(1, "Please select a Facebook group"),
@@ -41,6 +45,13 @@ type IndividualAuctionFormData = z.infer<typeof individualAuctionSchema>;
 export default function CreateIndividual() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const currentUserId = useCurrentUserId();
+
+  // Fetch user's Facebook groups
+  const { data: facebookGroups, isLoading: groupsLoading } = useUserFacebookGroups(currentUserId);
+  const createAuctionMutation = useCreateAuction();
 
   const form = useForm<IndividualAuctionFormData>({
     resolver: zodResolver(individualAuctionSchema),
@@ -57,9 +68,37 @@ export default function CreateIndividual() {
 
   const handleSubmit = async (data: IndividualAuctionFormData) => {
     setIsSubmitting(true);
-    console.log("Creating individual auction:", data);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
+    try {
+      const selectedGroup = facebookGroups?.find(g => g.id === data.facebookGroup);
+
+      await createAuctionMutation.mutateAsync({
+        title: data.itemName,
+        description: data.description,
+        facebookUrl: `https://facebook.com/groups/${selectedGroup?.facebookGroupId}/`,
+        startingBid: data.startingBid,
+        minIncrement: data.bidIncrement,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        userId: currentUserId,
+        facebookGroupId: data.facebookGroup,
+        isLiveFeed: false
+      });
+
+      toast({
+        title: "Auction Created!",
+        description: "Your auction has been created successfully.",
+      });
+
+      setLocation("/auctions");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create auction. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,12 +113,17 @@ export default function CreateIndividual() {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  //todo: remove mock functionality
-  const mockGroups = [
-    { id: "1", name: "Vintage Car Enthusiasts", members: "2.3K" },
-    { id: "2", name: "Antique Collectors Market", members: "5.1K" },
-    { id: "3", name: "Local Buy & Sell", members: "12K" },
-  ];
+  // Show loading state while fetching groups
+  if (groupsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading Facebook groups...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -114,9 +158,9 @@ export default function CreateIndividual() {
                           <SelectValue placeholder="Choose a group" />
                         </SelectTrigger>
                         <SelectContent>
-                          {mockGroups.map((group) => (
+                          {facebookGroups?.map((group) => (
                             <SelectItem key={group.id} value={group.id}>
-                              {group.name} • {group.members} members
+                              {group.name} • {group.memberCount} members
                             </SelectItem>
                           ))}
                         </SelectContent>
