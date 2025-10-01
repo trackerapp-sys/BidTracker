@@ -78,7 +78,8 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen(port, 'localhost', () => {
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+  server.listen(port, host, () => {
     log(`serving on port ${port}`);
     log(`Open your browser to: http://localhost:${port}`);
     log(`Vite HMR running on port 5001`);
