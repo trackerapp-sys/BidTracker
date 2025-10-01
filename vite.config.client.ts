@@ -28,7 +28,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: "dist", // Output to dist relative to root for client deployment
+    outDir: path.resolve(import.meta.dirname, "dist"), // Output to project root dist
     emptyOutDir: true,
   },
   server: {
