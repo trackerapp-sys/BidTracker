@@ -19,7 +19,7 @@ const menuItems = [
     icon: Home,
   },
   {
-    title: "Live Auctions",
+    title: "My Auctions",
     url: "/auctions",
     icon: Gavel,
   },
@@ -29,7 +29,7 @@ const menuItems = [
     icon: Plus,
   },
   {
-    title: "Bid History",
+    title: "Auction History",
     url: "/history",
     icon: History,
   },

@@ -1,127 +1,156 @@
-# Design Guidelines: Facebook Group Auction Management Platform
+# Design Guidelines: Facebook Auction Management Platform (Consumer Edition)
 
 ## Design Approach
 
-**Hybrid Approach**: Clean design system foundation (Linear/Notion-inspired) + Auction platform references (eBay, Bring a Trailer)
+**Reference-Based Approach**: Facebook Marketplace simplicity + Shopify's approachable admin + eBay's auction DNA
 
-**Core Principle**: Professional, data-dense interface that conveys trust and efficiency while making real-time auction activity immediately visible.
+**Core Principle**: Friendly, confidence-inspiring interface that makes auction hosting feel effortless for everyday Facebook users. Prioritize clarity over data density, with clear visual feedback for live auction states.
 
 ## Color Palette
 
 **Dark Mode (Primary)**
-- Background: 222 15% 8% (deep charcoal)
-- Surface: 222 15% 12% (elevated cards)
-- Surface Elevated: 222 15% 16% (modal/active states)
-- Border: 222 10% 25%
+- Background: 220 18% 10% (warm charcoal)
+- Surface: 220 16% 14% (elevated cards)
+- Surface Elevated: 220 14% 18% (modal/active states)
+- Border: 220 10% 28%
 - Text Primary: 0 0% 98%
-- Text Secondary: 0 0% 65%
+- Text Secondary: 0 0% 68%
 
 **Brand & Accent Colors**
-- Primary: 217 91% 60% (trustworthy blue - auction platform standard)
-- Success: 142 71% 45% (winning bid indicator)
-- Warning: 38 92% 50% (ending soon alerts)
-- Danger: 0 84% 60% (outbid notifications)
+- Primary: 221 83% 53% (Facebook-inspired blue for trust/familiarity)
+- Success: 142 76% 45% (winning bid, live status)
+- Warning: 38 92% 50% (ending soon, attention needed)
+- Accent: 280 65% 60% (Live Feed mode indicator, purple for energy)
+- Facebook Brand: 221 44% 41% (for Facebook login/integration elements)
 
 ## Typography
 
-**Font System**: Inter (Google Fonts)
-- Headings: 600-700 weight, tight tracking
+**Font Family**: Inter (Google Fonts) - friendly, highly legible
+- Display/Hero: 700 weight, -0.02em tracking
+- Section Headers: 600 weight
 - Body: 400-500 weight
-- Data/Numbers: 500-600 weight (tabular-nums for bid amounts)
+- Auction Titles: 600 weight, slightly condensed
+- Bid Amounts: 600 weight, tabular-nums
 
-**Scale**
-- Hero/Dashboard Title: text-3xl md:text-4xl font-bold
-- Section Headers: text-xl md:text-2xl font-semibold
-- Card Titles: text-lg font-semibold
+**Type Scale**
+- Hero: text-4xl md:text-5xl font-bold
+- Page Titles: text-2xl md:text-3xl font-semibold
+- Card Headers: text-xl font-semibold
 - Body: text-base
-- Small/Meta: text-sm text-secondary
-- Micro (timestamps): text-xs
+- Meta/Labels: text-sm text-secondary
+- Timestamps: text-xs text-secondary
 
 ## Layout System
 
-**Spacing Primitives**: Use Tailwind units of 2, 4, 6, 8, 12, 16
-- Component padding: p-6 to p-8
-- Section spacing: space-y-8 to space-y-12
-- Card gaps: gap-6
-- Form field spacing: space-y-4
+**Spacing Primitives**: Tailwind units of 3, 4, 6, 8, 12, 16, 20
+- Card padding: p-6 md:p-8
+- Section gaps: space-y-8 md:space-y-12
+- Component spacing: gap-4 to gap-6
+- Form fields: space-y-4
 
 **Container Strategy**
-- Main dashboard: max-w-7xl with grid-cols-1 lg:grid-cols-3 (sidebar + main)
-- Auction feed: max-w-6xl
-- Forms: max-w-2xl
-- Data tables: full-width within container
+- Main app: max-w-7xl with responsive sidebar (hidden on mobile, drawer)
+- Auction grids: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
+- Create auction flow: max-w-3xl
+- Live Feed interface: max-w-6xl with sidebar for inventory
 
 ## Component Library
 
-### Navigation
-- Top navigation bar with app logo, quick stats, user menu
-- Sidebar for admin (Dashboard, Active Auctions, Create Auction, Bid History, Settings)
-- Sticky positioning for real-time updates visibility
+### Facebook Authentication
+- Prominent "Continue with Facebook" button (Facebook blue with white text)
+- Avatar + name display in top-right corner
+- Connected groups selector (dropdown with Facebook group icons)
 
-### Auction Cards
-- Elevated cards (surface elevated background) with hover lift effect
-- Card structure: Featured image placeholder, Auction title, Facebook post URL (truncated with icon), Current bid (large, prominent), Time remaining (countdown with color coding), Bid count, "Place Bid" CTA
-- Active auction indicator: subtle left border in primary color
+### Navigation & Layout
+- Top bar: Logo + "Create Auction" CTA + User menu
+- Mobile: Bottom navigation with "Home", "Create", "My Auctions", "Profile"
+- Desktop sidebar: Dashboard, Create Auction, Active Auctions, Auction History, Settings
 
-### Live Auction Feed
-- Masonry-style grid on desktop (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
-- Real-time badge for auctions with recent activity
-- Status badges: "Live", "Ending Soon", "Hot" (multiple bids in last 5min)
+### Auction Type Cards (Selection Screen)
+Large, welcoming cards (h-48) for choosing auction type:
+- **Individual Post Auction**: Icon of single item, "Simple & Quick" badge, description: "Post one auction directly to your group"
+- **Live Feed Auction**: Icon of multiple items, "Pro Feature" badge, description: "Host live auctions with inventory management"
+- Hover lift effect, gradient backgrounds (blue-to-purple subtle gradients)
 
-### Forms (Create Auction)
-- Clean, spacious layout with clear field labels
-- Facebook Post URL input with validation icon
-- Date/time pickers for auction start/end
-- Starting bid input with currency formatting
-- Image upload with preview (auction item)
-- "Publish Auction" primary button
+### Individual Post Auction Form
+- Facebook Group selector with group thumbnails
+- Auction item name input (large, prominent)
+- Description textarea with character count
+- Starting bid input with currency symbol
+- Date/time picker (start & end) with friendly calendar
+- Image upload area (drag-drop, multi-image support with preview grid)
+- "Post to Facebook" primary button (Facebook blue)
 
-### Bid Submission Interface
-- Modal overlay with auction details recap
-- Current highest bid displayed prominently
-- Bid input with minimum increment validation
-- Bid history list (last 5 bids with timestamps)
-- Confirm bid button with loading state
+### Live Feed Auction Interface
+Split layout (lg:grid-cols-3):
+- **Left Sidebar (Inventory)**: Draggable item list, "Add Item" button, item cards with thumbnail, name, starting bid
+- **Center (Active Item)**: Large item display, current bid (huge typography), countdown timer, bid input with quick increment buttons (+$5, +$10), recent bids stream
+- **Right Panel (Controls)**: "Start Auction" / "Pause" / "Next Item" buttons, session stats (items sold, total bids, session time)
 
-### Data Displays
-- Tables for bid history: Striped rows, sticky header, sortable columns
-- Auction status indicators: Color-coded chips (Live=blue, Ended=gray, Cancelled=red)
-- Countdown timers: Dynamic updates with color transitions (green > yellow > red)
+### Auction Status Cards (Grid View)
+Rounded cards with:
+- Item image with status badge overlay ("Live" with pulse animation, "Ending Soon" with clock icon)
+- Auction title (truncated elegantly)
+- Current bid (large, colored by status - green for active, gray for ended)
+- Bid count bubble, time remaining with icon
+- Facebook group badge (small group avatar)
+- CTA: "View Auction" or "Manage"
 
-### Dashboard Statistics
-- Metric cards in grid: Total Active Auctions, Total Bids Today, Highest Current Bid, Ending in <1 Hour
-- Large numbers with descriptive labels
-- Trend indicators (up/down arrows with percentages)
+### Live Feed Controls
+Floating control bar (sticky bottom on mobile, sidebar on desktop):
+- Large toggle: "🔴 Live" / "⏸️ Paused" with color transitions
+- Session timer display
+- "Next Item" button (disabled when paused)
+- "End Session" with confirmation modal
+
+### Bid Activity Feed
+Real-time list component:
+- Avatar + bidder name (if available, else "Facebook User")
+- Bid amount (bold, color-coded if outbid/leading)
+- Timestamp (relative: "2m ago")
+- Scroll-to-top on new bid with subtle highlight animation
+
+### Empty States
+Friendly illustrations with clear CTAs:
+- "No auctions yet": Illustration of gavel + "Create your first auction" button
+- "No active bids": Illustration of waiting + "Share your auction link"
+- Warm, encouraging copy throughout
 
 ## Images
 
-**Hero Section**: Full-width banner (h-64) with gradient overlay
-- Image suggestion: Auction gavel or crowd bidding scene with blue gradient overlay (from transparent to background color)
-- Overlay text: "Manage Facebook Group Auctions with Precision"
+**Hero Section (Dashboard)**: Full-width banner (h-80) with vibrant auction scene
+- Suggested image: People at lively auction/marketplace with smartphones, overlaid with gradient (from 221 83% 53% at 20% opacity to background)
+- Hero text: "Host Auctions Right in Your Facebook Groups" with subtitle
 
-**Auction Cards**: Square thumbnails (aspect-square) for auction items
-- Placeholder if no image: Icon-based placeholder with gradient background
+**Auction Cards**: Square aspect ratio (aspect-square) for auction items
+- High-quality product photos when available
+- Gradient placeholder with item initial when no image (purple-to-blue gradient)
 
-**Empty States**: Illustration-style graphics for "No active auctions" or "No bids yet"
+**Feature Highlights**: Illustration-style graphics for "How it Works" section
+- Step 1: Facebook login illustration
+- Step 2: Create auction illustration
+- Step 3: Live bidding illustration
 
 ## Interaction Patterns
 
-- Minimal animations: Hover lift on cards (translate-y-1), button scale on click
-- Loading states: Spinner for async operations, skeleton loaders for auction feed
-- Real-time updates: Subtle pulse animation on new bid notifications
-- Toast notifications: Top-right corner for bid confirmations, outbid alerts
+- **Smooth Transitions**: Button hovers (scale-105), card lifts (translate-y-2), all with transition-all duration-200
+- **Real-time Feedback**: Pulse animation on new bids, color transitions on status changes, confetti animation on auction end
+- **Loading States**: Skeleton loaders for auction grids, spinner for post-to-Facebook actions
+- **Micro-interactions**: Heart animation when favoriting, checkmark animation on successful post
+- **Toast Notifications**: Bottom-center on mobile, top-right on desktop for bid updates, auction posted confirmations
 
 ## Accessibility & Responsive
 
-- Desktop-first with comprehensive mobile breakpoints
-- All form inputs with dark mode-friendly backgrounds (surface color)
-- High contrast for bid amounts and CTAs
-- Touch-friendly targets on mobile (min-h-12)
-- Clear focus indicators on all interactive elements
+- Mobile-first with touch-optimized controls (min 44px tap targets)
+- High contrast mode support for bid amounts and CTAs
+- Clear focus rings with primary color
+- Form validation with friendly error messages and icons
+- Responsive typography scaling (clamp() for fluid sizing)
 
 ## Key Differentiators
 
-- **Professional Dashboard Aesthetic**: Clean, data-focused like Linear
-- **Real-time Urgency Indicators**: Color-coded countdowns and bid activity
-- **Trust Signals**: Facebook URL integration, verified auction status
-- **Auction Platform DNA**: Card layouts inspired by eBay with modern execution
+- **Facebook-Native Feel**: Visual consistency with Facebook's design language for familiarity
+- **Two-Mode Design**: Simple mode (Individual) vs. Pro mode (Live Feed) with clear visual distinction
+- **Welcoming Onboarding**: Tutorial overlays, success celebrations, encouraging empty states
+- **Live Auction Energy**: Pulse animations, real-time updates, vibrant status indicators create excitement
+- **Mobile-Optimized**: Bottom navigation, thumb-friendly controls, simplified Live Feed on mobile
