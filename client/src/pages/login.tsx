@@ -71,10 +71,11 @@ export default function Login() {
   };
 
   const handleFacebookLogin = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Facebook OAuth integration will be available soon.",
-    });
+    // Redirect to Facebook OAuth endpoint
+    const serverUrl = import.meta.env.PROD
+      ? "https://auction-server-8snz.onrender.com"
+      : "";
+    window.location.href = `${serverUrl}/api/auth/facebook`;
   };
 
   return (

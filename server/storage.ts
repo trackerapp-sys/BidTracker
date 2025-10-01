@@ -8,14 +8,20 @@ import {
   type UserSettings, type InsertUserSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserByFacebookId(facebookId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+
+  // Authentication operations
+  authenticateUser(username: string, password: string): Promise<User | null>;
+  hashPassword(password: string): Promise<string>;
 
   // Auction operations
   getAuction(id: string): Promise<Auction | undefined>;
@@ -165,6 +171,12 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
+
   async getUserByFacebookId(facebookId: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.facebookId === facebookId,
@@ -174,9 +186,14 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const now = new Date();
+
+    // Hash the password before storing
+    const hashedPassword = await this.hashPassword(insertUser.password);
+
     const user: User = {
       ...insertUser,
       id,
+      password: hashedPassword,
       name: insertUser.name || null,
       email: insertUser.email || null,
       facebookId: insertUser.facebookId || null,
@@ -193,6 +210,11 @@ export class MemStorage implements IStorage {
     const user = this.users.get(id);
     if (!user) return undefined;
 
+    // Hash password if it's being updated
+    if (updates.password) {
+      updates.password = await this.hashPassword(updates.password);
+    }
+
     const updatedUser = {
       ...user,
       ...updates,
@@ -200,6 +222,21 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) return null;
+
+    return user;
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 12;
+    return bcrypt.hash(password, saltRounds);
   }
 
   // Auction operations

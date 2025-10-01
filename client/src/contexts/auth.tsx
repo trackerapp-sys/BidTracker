@@ -77,7 +77,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // Try to logout from session (for Facebook OAuth users)
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Session logout failed:', error);
+    }
+
     setUser(null);
     localStorage.removeItem("user");
   };

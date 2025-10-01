@@ -1,12 +1,49 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
+import passport from "./auth";
 import { storage } from "./storage";
 import { insertUserSchema, insertAuctionSchema, insertBidSchema, insertFacebookGroupSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   let httpServer: any; // Will be set later to access broadcast functions
-  // Authentication routes
+
+  // Facebook OAuth routes
+  app.get("/api/auth/facebook", passport.authenticate("facebook", {
+    scope: ["email", "public_profile", "user_managed_groups"]
+  }));
+
+  app.get("/api/auth/facebook/callback",
+    passport.authenticate("facebook", { failureRedirect: "/login?error=facebook_auth_failed" }),
+    (req, res) => {
+      // Successful authentication, redirect to dashboard
+      const clientUrl = process.env.NODE_ENV === 'production'
+        ? "https://auction-client.onrender.com/dashboard"
+        : "/dashboard";
+      res.redirect(clientUrl);
+    }
+  );
+
+  // Logout route
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  // Get current user
+  app.get("/api/auth/me", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({ user: req.user });
+    } else {
+      res.status(401).json({ error: "Not authenticated" });
+    }
+  });
+
+  // Traditional authentication routes (keep for backward compatibility)
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
