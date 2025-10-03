@@ -17,6 +17,8 @@ import CreateIndividual from "@/pages/create-individual";
 import CreateLiveFeed from "@/pages/create-live-feed";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
 import { AuthProvider, useAuth } from "@/contexts/auth";
 import { LogOut } from "lucide-react";
 
@@ -30,6 +32,8 @@ function Router() {
       <Route path="/create/live-feed" component={CreateLiveFeed} />
       <Route path="/history" component={History} />
       <Route path="/settings" component={Settings} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
     </Switch>
   );
 }

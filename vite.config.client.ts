@@ -26,10 +26,13 @@ export default defineConfig({
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: import.meta.dirname, // Use project root as root
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist"), // Output to project root dist
+    outDir: "dist", // Output to dist in project root
     emptyOutDir: true,
+    rollupOptions: {
+      input: path.resolve(import.meta.dirname, "client", "index.html"), // Point to client index.html
+    },
   },
   server: {
     fs: {
